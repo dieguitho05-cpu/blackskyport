@@ -7,7 +7,7 @@
 
 <link rel="stylesheet" href="styles.css">
 
-<!-- Librería Excel (versión estable) -->
+<!-- Librería Excel -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <!-- Librería gráficos -->
@@ -17,7 +17,6 @@
 
 <body>
 
-<!-- MENU -->
 <div id="menu" class="menu">
   <div class="menu-title">✈ BLACK SKYPORT</div>
 
@@ -26,7 +25,6 @@
   <div class="menu-item" onclick="mostrar('reportes')">📊 Reportes</div>
 </div>
 
-<!-- CONTENIDO -->
 <div class="container">
 
 <h2>✈ BLACK SKYPORT</h2>
@@ -50,7 +48,7 @@
 <div id="reportes" class="vista" style="display:none;">
   <h3>Reportes</h3>
 
-  <input type="file" onchange="importarExcel(event)">
+  <input type="file" id="fileInput">
   <button onclick="exportarExcel()">Exportar Excel</button>
 
   <canvas id="grafico"></canvas>
