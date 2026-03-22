@@ -1,0 +1,37 @@
+body {
+  font-family: Arial;
+  margin: 0;
+  background: #f4f4f4;
+}
+
+.container {
+  padding: 20px;
+}
+
+.menu {
+  background: black;
+  color: white;
+  padding: 10px;
+}
+
+.menu-item {
+  cursor: pointer;
+  padding: 8px;
+}
+
+.menu-item:hover {
+  background: gray;
+}
+
+button {
+  padding: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+input {
+  display: block;
+  margin: 5px 0;
+  padding: 8px;
+  width: 100%;
+}
