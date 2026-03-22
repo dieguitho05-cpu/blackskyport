@@ -1,48 +1,46 @@
-let servicios = [];
+// ======================
+// VARIABLES
+// ======================
+let datos = JSON.parse(localStorage.getItem("datos")) || [];
+
+// ======================
+// FUNCIONES
+// ======================
 
 function mostrar(vista) {
-  document.getElementById("home").style.display = "none";
-  document.getElementById("nuevo").style.display = "none";
-
+  document.querySelectorAll(".vista").forEach(v => v.style.display = "none");
   document.getElementById(vista).style.display = "block";
-
-  if (vista === "home") {
-    mostrarLista();
-  }
 }
 
 function guardar() {
-  let cliente = document.getElementById("cliente").value;
-  let origen = document.getElementById("origen").value;
-  let destino = document.getElementById("destino").value;
-  let precio = document.getElementById("precio").value;
+  const cliente = document.getElementById("cliente").value;
+  const origen = document.getElementById("origen").value;
+  const destino = document.getElementById("destino").value;
+  const precio = document.getElementById("precio").value;
 
-  servicios.push({ cliente, origen, destino, precio });
+  const servicio = { cliente, origen, destino, precio };
 
-  localStorage.setItem("servicios", JSON.stringify(servicios));
+  datos.push(servicio);
 
-  alert("Guardado");
+  localStorage.setItem("datos", JSON.stringify(datos));
 
-  mostrar("home");
+  mostrarLista();
 }
 
 function mostrarLista() {
-  let lista = document.getElementById("lista");
-  lista.innerHTML = "";
+  const contenedor = document.getElementById("lista");
+  contenedor.innerHTML = "";
 
-  servicios.forEach((s, i) => {
-    lista.innerHTML += `
+  datos.forEach((d, i) => {
+    contenedor.innerHTML += `
       <div>
-        ${s.cliente} - ${s.origen} → ${s.destino} ($${s.precio})
+        ${d.cliente} - ${d.origen} → ${d.destino} - S/ ${d.precio}
       </div>
     `;
   });
 }
 
-// cargar datos guardados
-window.onload = () => {
-  let datos = localStorage.getItem("servicios");
-  if (datos) {
-    servicios = JSON.parse(datos);
-  }
-};
+// ======================
+// INICIO
+// ======================
+mostrarLista();
