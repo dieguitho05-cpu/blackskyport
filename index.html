@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLACK SKYPORT</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style"></script>
+</head>
+
+<body>
+
+<div id="menu" class="menu">
+  <div class="menu-title">✈ BLACK SKYPORT</div>
+  <div class="menu-item" onclick="mostrar('home')">🏠 Inicio</div>
+  <div class="menu-item" onclick="mostrar('nuevo')">➕ Nuevo</div>
+</div>
+
+<div class="container">
+
+<h2>✈ BLACK SKYPORT</h2>
+
+<div id="home" class="vista">
+  <h3>Panel Principal</h3>
+  <div id="lista"></div>
+</div>
+
+<div id="nuevo" class="vista" style="display:none;">
+  <h3>Nuevo Servicio</h3>
+
+  <input id="cliente" placeholder="Cliente">
+  <input id="origen" placeholder="Origen">
+  <input id="destino" placeholder="Destino">
+  <input id="precio" type="number" placeholder="Precio">
+
+  <button onclick="guardar()">Guardar</button>
+</div>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
