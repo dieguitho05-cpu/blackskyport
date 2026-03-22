@@ -1,6 +1,3 @@
-// ======================
-// DATOS
-// ======================
 let datos = JSON.parse(localStorage.getItem("datos")) || [];
 
 // ======================
@@ -19,6 +16,8 @@ function guardar() {
   const origen = document.getElementById("origen").value;
   const destino = document.getElementById("destino").value;
   const precio = document.getElementById("precio").value;
+
+  if (!cliente || !origen || !destino || !precio) return;
 
   const servicio = { cliente, origen, destino, precio };
 
@@ -50,7 +49,6 @@ function mostrarLista() {
 // ======================
 function exportarExcel() {
   const hoja = XLSX.utils.json_to_sheet(datos);
-
   const libro = XLSX.utils.book_new();
 
   XLSX.utils.book_append_sheet(libro, hoja, "Datos");
@@ -61,13 +59,13 @@ function exportarExcel() {
 // ======================
 // IMPORTAR EXCEL
 // ======================
-function importarExcel(event) {
-  const archivo = event.target.files[0];
+document.getElementById("fileInput").addEventListener("change", function(e) {
+  const archivo = e.target.files[0];
 
   const reader = new FileReader();
 
-  reader.onload = function(e) {
-    const data = new Uint8Array(e.target.result);
+  reader.onload = function(event) {
+    const data = new Uint8Array(event.target.result);
 
     const workbook = XLSX.read(data, { type: "array" });
 
@@ -83,7 +81,7 @@ function importarExcel(event) {
   };
 
   reader.readAsArrayBuffer(archivo);
-}
+});
 
 // ======================
 // INICIO
