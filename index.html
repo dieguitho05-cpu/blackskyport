@@ -1052,6 +1052,42 @@ function _exportar(tipo, datos) {
 /* ═══════════════════════════════════════════
    IMPORTAR
 ═══════════════════════════════════════════ */
+/* convierte serial de fecha Excel a YYYY-MM-DD */
+function excelDateToISO(v) {
+  if (!v && v!==0) return '';
+  if (typeof v==='string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(v)) { const[d,m,y]=v.split('/'); return `${y}-${m}-${d}`; }
+    if (/^\d{2}-\d{2}-\d{4}$/.test(v)) { const[d,m,y]=v.split('-'); return `${y}-${m}-${d}`; }
+    return v;
+  }
+  if (typeof v==='number') {
+    const d=new Date(Math.round((v-25569)*86400000));
+    const yyyy=d.getUTCFullYear();
+    const mm=String(d.getUTCMonth()+1).padStart(2,'0');
+    const dd=String(d.getUTCDate()).padStart(2,'0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  return '';
+}
+
+/* limpia montos tipo "S/.200.00" o "S/ 45" o "200.00" → número */
+function parseMonto(v) {
+  if (typeof v==='number') return v;
+  /* busca el primer número real dentro del string (ignora el "S/." del inicio) */
+  const m=String(v).match(/(\d+\.?\d*)/);
+  return m?parseFloat(m[1]):0;
+}
+
+/* detecta si es el formato antiguo de BLACK SKYPORT (columnas SERVICIO / CLIENTE / FECHA / MONTO / COMISION) */
+function esFormatoAntiguo(rawRows) {
+  if (!rawRows||!rawRows.length) return false;
+  /* Los headers reales están en la fila 1 (índice 1) */
+  const fila1=rawRows[1]||[];
+  const texto=fila1.join(' ').toUpperCase();
+  return texto.includes('SERVICIO') || texto.includes('INICIO') || texto.includes('MONTO DEL SERVICIO');
+}
+
 function importar(e) {
   const file=e.target.files[0]; if (!file) return;
   if (typeof XLSX==='undefined') { toast('⚠ Librería no cargada. Verifica tu conexión.','warn'); return; }
@@ -1061,32 +1097,95 @@ function importar(e) {
       const isCSV=file.name.toLowerCase().endsWith('.csv');
       const wb=XLSX.read(isCSV?ev.target.result:new Uint8Array(ev.target.result),{type:isCSV?'string':'array'});
       const ws=wb.Sheets[wb.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-      if (!rows.length) { toast('⚠ Sin datos en el archivo','warn'); return; }
 
-      const imp=rows.map((r,i)=>{
-        const conductor=String(r['Conductor']||r['conductor']||'');
-        const precio=parseFloat(r['Precio']||r['precio']||0);
-        const descuento=parseFloat(r['Desc%']||r['descuento']||r['Descuento %']||0);
-        const precioFinal=parseFloat(r['Precio Final']||r['precioFinal']||0)||precio-precio*descuento/100;
-        const conductorPago=parseFloat(r['Pago Cond.']||r['Pago Conductor']||r['conductorPago']||0)||precio*0.75;
-        const empresa=parseFloat(r['Empresa']||r['empresa']||r['Ganancia Empresa']||0)||precioFinal-conductorPago;
-        let fecha=String(r['Fecha']||r['fecha']||'');
-        if (/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) { const[d,m,y]=fecha.split('/');fecha=`${y}-${m}-${d}`; }
-        return {id:parseInt(r['ID']||r['id']||i+1)||i+1,conductor,tipo:TIPO[conductor]||String(r['Tipo']||r['tipo']||'Auto'),
-          cliente:String(r['Cliente']||r['cliente']||''),nroVuelo:String(r['Nº Vuelo']||r['nroVuelo']||''),
-          pasajeros:parseInt(r['Pasajeros']||r['pasajeros']||1)||1,
-          origen:String(r['Origen']||r['origen']||''),destino:String(r['Destino']||r['destino']||''),
-          fecha,hora:String(r['Hora']||r['hora']||''),
-          precio,descuento,precioFinal,conductorPago,empresa,
-          notas:String(r['Notas']||r['notas']||'')};
-      }).filter(s=>s.conductor||s.origen);
+      /* leer como array sin procesar para detectar formato */
+      const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
 
-      if (!imp.length) { toast('⚠ Sin servicios válidos en el archivo','warn'); return; }
-      servicios=imp.map(sanear);
-      save();
-      toast(`✅ ${imp.length} servicios importados`);
-      ir('home');
+      let imp=[];
+
+      if (esFormatoAntiguo(rawRows)) {
+        /* ── FORMATO ANTIGUO BLACK SKYPORT ──────────────────
+           Fila 0: título "BLACK SKYPORT"
+           Fila 1: cabeceras  SERVICIO: INICIO / FIN | CLIENTE | FECHA | MONTO | COMISION
+           Fila 2+: datos
+        ─────────────────────────────────────────────────── */
+        const datos=rawRows.slice(2).filter(r=>r[0]&&String(r[0]).trim()&&String(r[0]).trim()!=='');
+        imp=datos.map((r,i)=>{
+          const ruta=String(r[0]||'').trim();
+          const partes=ruta.split('/');
+          const origen=(partes[0]||'').trim();
+          const destino=partes.slice(1).join('/').trim();
+          const cliente=String(r[1]||'').trim();
+          const fecha=excelDateToISO(r[2]);
+          const precio=parseMonto(r[3]);
+          const empresa=parseMonto(r[4]);
+          const conductorPago=precio*0.75;
+          return {
+            id:i+1,
+            conductor:'Eduardo',
+            tipo:'Auto',
+            cliente,
+            nroVuelo:'',
+            pasajeros:1,
+            origen,
+            destino,
+            fecha,
+            hora:'',
+            precio,
+            descuento:0,
+            precioFinal:precio,
+            conductorPago,
+            empresa,
+            notas:''
+          };
+        }).filter(s=>s.origen||s.cliente);
+
+        if (!imp.length) { toast('⚠ Sin datos válidos en el archivo','warn'); return; }
+        servicios=imp.map(sanear);
+        save();
+        toast(`✅ ${imp.length} servicios importados del formato antiguo`);
+        /* avisar que deben asignar conductor */
+        setTimeout(()=>toast('⚠ Recuerda asignar el conductor a cada servicio (editar ✏)','warn'),2500);
+        ir('reportes');
+        setTab(document.querySelector('.tab'),'conductor');
+        setTimeout(()=>{ document.querySelectorAll('.tab')[6].click(); },100);
+
+      } else {
+        /* ── FORMATO PROPIO DEL SISTEMA ─────────────────── */
+        const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        if (!rows.length) { toast('⚠ Sin datos en el archivo','warn'); return; }
+
+        imp=rows.map((r,i)=>{
+          const conductor=String(r['Conductor']||r['conductor']||'Eduardo');
+          const precio=parseMonto(r['Precio']||r['precio']||0);
+          const descuento=parseFloat(r['Desc%']||r['descuento']||r['Descuento %']||0);
+          const precioFinal=parseMonto(r['Precio Final']||r['precioFinal'])||precio-precio*descuento/100;
+          const conductorPago=parseMonto(r['Pago Cond.']||r['Pago Conductor']||r['conductorPago'])||precio*0.75;
+          const empresa=parseMonto(r['Empresa']||r['empresa']||r['Ganancia Empresa'])||precioFinal-conductorPago;
+          const fecha=excelDateToISO(r['Fecha']||r['fecha']||'');
+          return {
+            id:parseInt(r['ID']||r['id']||i+1)||i+1,
+            conductor,
+            tipo:TIPO[conductor]||String(r['Tipo']||r['tipo']||'Auto'),
+            cliente:String(r['Cliente']||r['cliente']||''),
+            nroVuelo:String(r['Nº Vuelo']||r['nroVuelo']||''),
+            pasajeros:parseInt(r['Pasajeros']||r['pasajeros']||1)||1,
+            origen:String(r['Origen']||r['origen']||''),
+            destino:String(r['Destino']||r['destino']||''),
+            fecha,
+            hora:String(r['Hora']||r['hora']||''),
+            precio,descuento,precioFinal,conductorPago,empresa,
+            notas:String(r['Notas']||r['notas']||'')
+          };
+        }).filter(s=>s.origen||s.cliente);
+
+        if (!imp.length) { toast('⚠ Sin servicios válidos en el archivo','warn'); return; }
+        servicios=imp.map(sanear);
+        save();
+        toast(`✅ ${imp.length} servicios importados`);
+        ir('home');
+      }
+
     } catch(err) { toast('❌ Error al leer el archivo: '+err.message,'err'); }
   };
   file.name.toLowerCase().endsWith('.csv')?reader.readAsText(file,'utf-8'):reader.readAsArrayBuffer(file);
