@@ -7,27 +7,34 @@
 
 <link rel="stylesheet" href="styles.css">
 
+<!-- Librerías externas (se mantienen) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style"></script>
 </head>
 
 <body>
 
+<!-- MENU -->
 <div id="menu" class="menu">
   <div class="menu-title">✈ BLACK SKYPORT</div>
+
   <div class="menu-item" onclick="mostrar('home')">🏠 Inicio</div>
   <div class="menu-item" onclick="mostrar('nuevo')">➕ Nuevo</div>
+  <div class="menu-item" onclick="mostrar('reportes')">📊 Reportes</div>
 </div>
 
+<!-- CONTENIDO -->
 <div class="container">
 
 <h2>✈ BLACK SKYPORT</h2>
 
+<!-- VISTA HOME -->
 <div id="home" class="vista">
   <h3>Panel Principal</h3>
   <div id="lista"></div>
 </div>
 
+<!-- VISTA NUEVO -->
 <div id="nuevo" class="vista" style="display:none;">
   <h3>Nuevo Servicio</h3>
 
@@ -39,8 +46,15 @@
   <button onclick="guardar()">Guardar</button>
 </div>
 
+<!-- VISTA REPORTES -->
+<div id="reportes" class="vista" style="display:none;">
+  <h3>Reportes</h3>
+  <canvas id="grafico"></canvas>
 </div>
 
+</div>
+
+<!-- SCRIPT PRINCIPAL -->
 <script src="app.js"></script>
 
 </body>
