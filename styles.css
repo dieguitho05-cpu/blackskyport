@@ -1,37 +1,39 @@
 body {
-  font-family: Arial;
   margin: 0;
+  font-family: Arial, sans-serif;
   background: #f4f4f4;
 }
 
-.container {
-  padding: 20px;
+.menu {
+  width: 220px;
+  height: 100vh;
+  background: #111;
+  color: #fff;
+  position: fixed;
 }
 
-.menu {
-  background: black;
-  color: white;
-  padding: 10px;
+.menu-title {
+  padding: 20px;
+  font-weight: bold;
+  text-align: center;
 }
 
 .menu-item {
+  padding: 15px;
   cursor: pointer;
-  padding: 8px;
 }
 
 .menu-item:hover {
-  background: gray;
+  background: #333;
 }
 
-button {
-  padding: 10px;
-  margin-top: 10px;
-  cursor: pointer;
+.container {
+  margin-left: 220px;
+  padding: 20px;
 }
 
-input {
-  display: block;
-  margin: 5px 0;
-  padding: 8px;
-  width: 100%;
+.vista {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
 }
